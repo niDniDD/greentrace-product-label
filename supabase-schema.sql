@@ -9,6 +9,9 @@ create table if not exists products (
   updated_at timestamptz not null default now()
 );
 
+alter table products
+add column if not exists product_type text not null default 'fertilizer';
+
 -- batches table
 create table if not exists batches (
   id uuid primary key default uuid_generate_v4(),
@@ -22,6 +25,9 @@ create table if not exists batches (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table batches
+add column if not exists planting_date date;
 
 -- optional issue_types reference table
 create table if not exists issue_types (
@@ -53,6 +59,7 @@ select
   b.id,
   b.batch_number,
   b.expiry_date,
+  b.planting_date,
   b.composition,
   b.benefits,
   b.instructions,
@@ -60,6 +67,7 @@ select
   b.updated_at,
   p.id as product_id,
   p.name as product_name,
-  p.description as product_description
+  p.description as product_description,
+  p.product_type
 from batches b
 join products p on p.id = b.product_id;

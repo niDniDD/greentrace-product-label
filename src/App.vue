@@ -9,6 +9,9 @@
           </div>
 
           <div class="d-flex flex-wrap gap-2">
+            <a href="/?view=vegetables" :class="['btn btn-sm rounded-3', currentView === 'vegetables' ? 'btn-success' : 'btn-outline-success']">
+              ฉลากผัก
+            </a>
             <a href="/?view=list" :class="['btn btn-sm rounded-3', currentView === 'list' ? 'btn-success' : 'btn-outline-success']">
               รายการฉลาก
             </a>
@@ -23,7 +26,8 @@
       </div>
     </nav>
 
-    <LabelListPage v-if="currentView === 'list'" />
+    <VegetableCatalogPage v-if="currentView === 'vegetables'" />
+    <LabelListPage v-else-if="currentView === 'list'" />
     <CreateLabelPage v-else-if="currentView === 'create'" />
     <ProductLabelMobile v-else />
   </div>
@@ -33,6 +37,7 @@
 import CreateLabelPage from './components/CreateLabelPage.vue'
 import LabelListPage from './components/LabelListPage.vue'
 import ProductLabelMobile from './components/ProductLabelMobile.vue'
+import VegetableCatalogPage from './components/VegetableCatalogPage.vue'
 
 const searchParams = new URLSearchParams(window.location.search)
 const currentView = searchParams.get('view') || (searchParams.get('batch') ? 'label' : 'list')

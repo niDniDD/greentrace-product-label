@@ -37,8 +37,10 @@
             </div>
 
             <p class="mb-1 text-muted">Batch No. <strong>{{ product.batch_number }}</strong></p>
-            <p class="mb-1 small text-muted">อัปเดตล่าสุด {{ product.updated_at }}</p>
+            <p class="mb-1 small text-muted">{{ primaryDateLabel }} {{ resolvePlantingDate(product) }}</p>
+            <p class="mb-1 small text-muted">อัปเดตล่าสุด {{ formatDate(product.updated_at) }}</p>
             <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+              <span class="badge bg-secondary text-uppercase small">{{ labelTypeBadge }}</span>
               <span class="badge bg-success text-uppercase small">Batch from URL: {{ batchNumber }}</span>
               <span v-if="usingQueryString" class="badge bg-info text-dark small">โหลดจาก query string</span>
             </div>
@@ -51,11 +53,11 @@
            <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="benefits-heading">
           <div class="card-body py-3 px-3">
             <div class="mb-2">
-              <h2 id="benefits-heading" class="h6 mb-0 text-success">สรรพคุณ</h2>
+              <h2 id="benefits-heading" class="h6 mb-0 text-success">{{ isVegetableLabel ? 'ประโยชน์ของผัก' : 'สรรพคุณ' }}</h2>
             </div>
             <ul class="list-unstyled mb-0">
               <li
-                v-for="(benefit, index) in product.benefits"
+                v-for="(benefit, index) in displayBenefits"
                 :key="index"
                 class="mb-2 d-flex gap-2 align-items-start"
               >
@@ -69,18 +71,21 @@
         <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="composition-heading">
           <div class="card-body py-3 px-3">
             <div class="mb-2">
-              <h2 id="composition-heading" class="h6 mb-0 text-success">ส่วนประกอบหลัก</h2>
-              <p class="small text-muted mb-0">ข้อมูลทางเทคนิคที่ทีมฟาร์มต้องรู้</p>
+              <h2 id="composition-heading" class="h6 mb-0 text-success">{{ isVegetableLabel ? 'ข้อมูลสำคัญของแปลงปลูก' : 'ส่วนประกอบหลัก' }}</h2>
+              <p class="small text-muted mb-0">{{ isVegetableLabel ? 'สรุปข้อมูลสำคัญของผักล็อตนี้' : 'ข้อมูลทางเทคนิคที่ทีมฟาร์มต้องรู้' }}</p>
             </div>
-            <ul class="list-group list-group-flush mb-0">
+            <div v-if="displayComposition.length === 0" class="text-muted small py-2">
+              ไม่มีข้อมูลส่วนประกอบเพิ่มเติม
+            </div>
+            <ul v-else class="list-group list-group-flush mb-0">
               <li
-                v-for="(item, index) in product.composition"
+                v-for="(item, index) in displayComposition"
                 :key="index"
                 class="list-group-item px-0 py-2 border-0"
               >
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center gap-2">
                   <span class="fw-semibold">{{ item.name }}</span>
-                  <span class="text-muted small">{{ item.ratio }}</span>
+                  <span v-if="item.ratio && item.ratio !== '-'" class="text-muted small">{{ item.ratio }}</span>
                 </div>
                 <span class="d-block text-muted small">{{ item.detail }}</span>
               </li>
@@ -91,10 +96,10 @@
         <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="instruction-heading">
           <div class="card-body py-3 px-3">
             <div class="mb-2">
-              <h2 id="instruction-heading" class="h6 mb-0 text-success">วิธีใช้</h2>
+              <h2 id="instruction-heading" class="h6 mb-0 text-success">{{ isVegetableLabel ? 'คำแนะนำเพิ่มเติม' : 'วิธีใช้' }}</h2>
             </div>
             <ol class="instruction-list ps-3 mb-0">
-              <li v-for="(step, index) in product.instructions" :key="index" class="mb-2">
+              <li v-for="(step, index) in displayInstructions" :key="index" class="mb-2">
                 <span class="step-index">{{ index + 1 }}</span>
                 <span class="instruction-text">{{ step }}</span>
               </li>
@@ -113,7 +118,7 @@
           </button>
         </div>
 
-        <div v-if="showReportIssue" class="card border-0 shadow-sm rounded-4 mb-3">
+        <div v-if="showReportIssue" id="report-issue-section" class="card border-0 shadow-sm rounded-4 mb-3">
           <div class="card-body py-3 px-3">
             <div class="mb-3">
               <h2 class="h6 text-success mb-1">รายละเอียดปัญหา</h2>
@@ -206,19 +211,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { supabase } from '../lib/supabase.js'
 import QRCodeGenerator from './QRCodeGenerator.vue'
 
 const searchParams = new URLSearchParams(window.location.search)
 const queryBatch = searchParams.get('batch')?.trim()
+const queryAction = searchParams.get('action')?.trim()?.toLowerCase()
 const batchNumber = queryBatch || 'BR-240406-01'
 const usingQueryString = Boolean(queryBatch)
 
 const product = ref(null)
 const loading = ref(true)
 const error = ref('')
-const showReportIssue = ref(false)
+const showReportIssue = ref(queryAction === 'report')
 const issueText = ref('')
 const issueType = ref('Quality')
 const isSubmitting = ref(false)
@@ -329,6 +335,99 @@ const submitIssue = async () => {
 
 const landingOrigin = import.meta.env.VITE_APP_LANDING_ORIGIN || window.location.origin
 const landingUrl = `${landingOrigin}/?batch=${encodeURIComponent(batchNumber)}`
+
+const resolveLabelType = (currentProduct) => {
+  const compositionItems = Array.isArray(currentProduct?.composition) ? currentProduct.composition : []
+  const typeItem = compositionItems.find((item) => `${item?.name || ''}`.includes('ประเภทฉลาก'))
+  const rawType = `${typeItem?.ratio || typeItem?.detail || ''}`.trim().toLowerCase()
+
+  if (rawType.includes('vegetable') || rawType.includes('ผัก')) {
+    return 'vegetable'
+  }
+
+  if (rawType.includes('fertilizer') || rawType.includes('ปุ๋ย')) {
+    return 'fertilizer'
+  }
+
+  if (compositionItems.some((item) => `${item?.name || ''}`.includes('วันปลูก'))) {
+    return 'vegetable'
+  }
+
+  return 'fertilizer'
+}
+
+const resolvePlantingDate = (currentProduct) => {
+  const compositionItems = Array.isArray(currentProduct?.composition) ? currentProduct.composition : []
+  const plantingItem = compositionItems.find((item) => {
+    const itemName = `${item?.name || ''}`
+    return itemName.includes('วันปลูก') || itemName.includes('วันผลิต') || itemName.includes('วันที่อ้างอิง')
+  })
+
+  if (plantingItem?.ratio) {
+    return plantingItem.ratio
+  }
+
+  if (currentProduct?.created_at) {
+    return new Date(currentProduct.created_at).toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  return '-'
+}
+
+const normalizeCompositionItem = (item) => {
+  const name = `${item?.name || ''}`.trim()
+  const ratio = `${item?.ratio || ''}`.trim()
+  const detail = `${item?.detail || ''}`.trim()
+
+  if (name && detail && name === detail) {
+    return {
+      name: 'ข้อมูลสำคัญ',
+      ratio: ratio || '-',
+      detail,
+    }
+  }
+
+  return {
+    name: name || 'ข้อมูลสำคัญ',
+    ratio: ratio || '-',
+    detail: detail || name || 'ไม่ระบุรายละเอียด',
+  }
+}
+
+const isVegetableLabel = computed(() => resolveLabelType(product.value) === 'vegetable')
+const labelTypeBadge = computed(() => (isVegetableLabel.value ? 'ฉลากผัก' : 'ฉลากปุ๋ย'))
+const primaryDateLabel = computed(() => (isVegetableLabel.value ? 'วันปลูก ' : 'วันผลิต '))
+
+const displayComposition = computed(() => {
+  const compositionItems = Array.isArray(product.value?.composition) ? product.value.composition : []
+  return compositionItems
+    .filter((item) => {
+      const itemName = `${item?.name || ''}`
+      return !itemName.includes('วันปลูก') && !itemName.includes('วันผลิต') && !itemName.includes('วันที่อ้างอิง') && !itemName.includes('ประเภทฉลาก')
+    })
+    .map(normalizeCompositionItem)
+})
+
+const displayBenefits = computed(() => {
+  if (Array.isArray(product.value?.benefits) && product.value.benefits.length > 0) {
+    return product.value.benefits
+  }
+
+  const description = product.value?.product?.description?.trim()
+  return description ? [description] : ['ไม่มีข้อมูลประโยชน์เพิ่มเติม']
+})
+
+const displayInstructions = computed(() => {
+  if (Array.isArray(product.value?.instructions) && product.value.instructions.length > 0) {
+    return product.value.instructions
+  }
+
+  return ['ตรวจสอบความสดและสภาพของล็อตนี้ก่อนนำไปใช้งาน']
+})
 
 const formatDate = (value) => {
   return new Date(value).toLocaleString('th-TH', {
