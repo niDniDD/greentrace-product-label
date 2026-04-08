@@ -75,7 +75,6 @@
                       <p class="small text-muted mb-1">Batch No. <strong>{{ batch.batch_number }}</strong></p>
                     </div>
                     <div class="d-flex flex-column align-items-end gap-1">
-                      <span class="badge bg-light text-dark border">{{ getLabelTypeLabel(batch) }}</span>
                       <span class="badge text-uppercase" :class="statusClass(batch.status)">
                         {{ batch.status || 'active' }}
                       </span>
@@ -110,9 +109,14 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" @click="printQr(batch)">
                       พิมพ์ QR
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary rounded-3" @click="copyLink(batch.batch_number)">
-                      คัดลอกลิงก์
-                    </button>
+                    <div class="d-inline-flex align-items-center gap-2">
+                      <button type="button" class="btn btn-sm btn-outline-primary rounded-3" @click="copyLink(batch.batch_number)">
+                        คัดลอกลิงก์
+                      </button>
+                      <span class="label-type-chip" :title="getLabelTypeLabel(batch)" :aria-label="getLabelTypeLabel(batch)">
+                        {{ getLabelTypeIcon(batch) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -256,6 +260,16 @@ const resolvePlantingDate = (batch) => {
 }
 
 const getLabelTypeLabel = (batch) => labelTypeLabelMap[resolveLabelType(batch)] || resolveLabelType(batch)
+const getLabelTypeIcon = (batch) => {
+  switch (resolveLabelType(batch)) {
+    case 'vegetable':
+      return '🥬'
+    case 'fertilizer':
+      return '🧪'
+    default:
+      return '🏷️'
+  }
+}
 const getPrimaryDateLabel = (batch) => (resolveLabelType(batch) === 'vegetable' ? 'วันปลูก' : 'วันผลิต')
 const getExpiryDateLabel = (batch) => (resolveLabelType(batch) === 'vegetable' ? 'พร้อมเก็บ/หมดอายุ' : 'วันหมดอายุ')
 const resolvePrimaryDate = (batch) => resolvePlantingDate(batch)
@@ -323,6 +337,20 @@ onMounted(fetchBatches)
   border-radius: 50%;
   background-color: #6b8f5d;
   flex-shrink: 0;
+}
+
+.label-type-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: #eef7ee;
+  border: 1px solid rgba(44, 100, 56, 0.16);
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .print-only {
