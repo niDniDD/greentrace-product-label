@@ -13,6 +13,14 @@
       </div>
 
       <div v-else>
+        <section class="card border-0 shadow-sm rounded-4 mb-3">
+          <div class="card-body py-3 px-3 text-center">
+            <h2 class="h6 text-success mb-2">QR Code สำหรับหน้า Landing Page</h2>
+            <QRCodeGenerator :url="landingUrl" />
+            <p class="small text-muted mt-2">สแกนเพื่อเปิดหน้าฉลากโดยตรง</p>
+          </div>
+        </section>
+
         <header class="card border-0 shadow-sm rounded-4 mb-3" aria-label="Product label header">
           <div class="card-body py-3 px-3">
             <div class="d-flex justify-content-between align-items-start mb-3 gap-2">
@@ -40,6 +48,24 @@
           </div>
         </header>
 
+           <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="benefits-heading">
+          <div class="card-body py-3 px-3">
+            <div class="mb-2">
+              <h2 id="benefits-heading" class="h6 mb-0 text-success">สรรพคุณ</h2>
+            </div>
+            <ul class="list-unstyled mb-0">
+              <li
+                v-for="(benefit, index) in product.benefits"
+                :key="index"
+                class="mb-2 d-flex gap-2 align-items-start"
+              >
+                <span class="bullet"></span>
+                <span class="text-muted">{{ benefit }}</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="composition-heading">
           <div class="card-body py-3 px-3">
             <div class="mb-2">
@@ -60,25 +86,7 @@
               </li>
             </ul>
           </div>
-        </section>
-
-        <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="benefits-heading">
-          <div class="card-body py-3 px-3">
-            <div class="mb-2">
-              <h2 id="benefits-heading" class="h6 mb-0 text-success">สรรพคุณ</h2>
-            </div>
-            <ul class="list-unstyled mb-0">
-              <li
-                v-for="(benefit, index) in product.benefits"
-                :key="index"
-                class="mb-2 d-flex gap-2 align-items-start"
-              >
-                <span class="bullet"></span>
-                <span class="text-muted">{{ benefit }}</span>
-              </li>
-            </ul>
-          </div>
-        </section>
+        </section>    
 
         <section class="card border-0 shadow-sm rounded-4 mb-3" aria-labelledby="instruction-heading">
           <div class="card-body py-3 px-3">
@@ -104,14 +112,6 @@
             {{ showReportIssue ? 'ปิดฟอร์มแจ้งปัญหา' : 'แจ้งปัญหาในล็อตนี้' }}
           </button>
         </div>
-
-        <section class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body py-3 px-3 text-center">
-            <h2 class="h6 text-success mb-2">QR Code สำหรับหน้า Landing Page</h2>
-            <QRCodeGenerator :url="landingUrl" />
-            <p class="small text-muted mt-2">สแกนเพื่อเปิดหน้าฉลากโดยตรง</p>
-          </div>
-        </section>
 
         <div v-if="showReportIssue" class="card border-0 shadow-sm rounded-4 mb-3">
           <div class="card-body py-3 px-3">

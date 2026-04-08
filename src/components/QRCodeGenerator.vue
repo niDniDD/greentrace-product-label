@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import QRCode from 'qrcode'
 
 const props = defineProps({
@@ -21,9 +21,20 @@ const props = defineProps({
 
 const qrSrc = ref('')
 
-onMounted(async () => {
-  qrSrc.value = await QRCode.toDataURL(props.url)
-})
+const generateQr = async (url) => {
+  qrSrc.value = ''
+  qrSrc.value = await QRCode.toDataURL(url)
+}
+
+watch(
+  () => props.url,
+  (newUrl) => {
+    if (newUrl) {
+      generateQr(newUrl)
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
