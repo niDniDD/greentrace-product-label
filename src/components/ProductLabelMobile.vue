@@ -83,11 +83,11 @@
                 :key="index"
                 class="list-group-item px-0 py-2 border-0"
               >
-                <div class="d-flex justify-content-between align-items-center gap-2">
-                  <span class="fw-semibold">{{ item.name }}</span>
-                  <span v-if="item.ratio && item.ratio !== '-'" class="text-muted small">{{ item.ratio }}</span>
+                <div v-if="item.name || item.ratio" class="d-flex justify-content-between align-items-center gap-2">
+                  <span v-if="item.name" class="fw-semibold">{{ item.name }}</span>
+                  <span v-if="item.ratio" class="text-muted small">{{ item.ratio }}</span>
                 </div>
-                <span class="d-block text-muted small">{{ item.detail }}</span>
+                <span v-if="item.detail" class="d-block text-muted small">{{ item.detail }}</span>
               </li>
             </ul>
           </div>
@@ -379,22 +379,20 @@ const resolvePlantingDate = (currentProduct) => {
 }
 
 const normalizeCompositionItem = (item) => {
-  const name = `${item?.name || ''}`.trim()
-  const ratio = `${item?.ratio || ''}`.trim()
-  const detail = `${item?.detail || ''}`.trim()
+  const rawName = `${item?.name || ''}`.trim()
+  const rawRatio = `${item?.ratio || ''}`.trim()
+  const rawDetail = `${item?.detail || ''}`.trim()
+  const genericLabels = ['ข้อมูลสำคัญ', 'รายละเอียดล็อต', 'ข้อมูลสำคัญของผัก', 'ข้อมูลสำคัญของแปลงปลูก']
 
-  if (name && detail && name === detail) {
-    return {
-      name: 'ข้อมูลสำคัญ',
-      ratio: ratio || '-',
-      detail,
-    }
-  }
+  const isGenericName = !rawName || genericLabels.includes(rawName)
+  const name = isGenericName ? '' : rawName
+  const ratio = rawRatio && rawRatio !== '-' ? rawRatio : ''
+  const detail = rawDetail || (isGenericName ? '' : rawName)
 
   return {
-    name: name || 'ข้อมูลสำคัญ',
-    ratio: ratio || '-',
-    detail: detail || name || 'ไม่ระบุรายละเอียด',
+    name,
+    ratio,
+    detail: detail || 'ไม่ระบุรายละเอียด',
   }
 }
 

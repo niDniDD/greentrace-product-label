@@ -222,19 +222,19 @@ const parseComposition = (value) => {
 
       if (parts.length === 1) {
         return {
-          name: 'ข้อมูลสำคัญ',
-          ratio: '-',
+          name: '',
+          ratio: '',
           detail: name || 'ไม่ระบุรายละเอียด',
         }
       }
 
       return {
-        name: name || 'ข้อมูลสำคัญ',
-        ratio: ratio || '-',
-        detail: detailParts.join(' | ') || name || 'ไม่ระบุรายละเอียด',
+        name: name && name !== 'ข้อมูลสำคัญ' ? name : '',
+        ratio: ratio && ratio !== '-' ? ratio : '',
+        detail: detailParts.join(' | ') || (name && name !== 'ข้อมูลสำคัญ' ? '' : 'ไม่ระบุรายละเอียด'),
       }
     })
-    .filter(Boolean)
+    .filter((item) => item.name || item.ratio || item.detail)
 }
 
 const fetchProductSuggestions = async () => {
